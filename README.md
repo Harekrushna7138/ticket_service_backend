@@ -1,322 +1,234 @@
-# Support Ticketing System Backend
+# Customer Support Ticketing System
 
-A comprehensive Customer Support Ticketing System built with Rust, Axum, and PostgreSQL. This system provides a robust backend for managing customer support operations with real-time collaboration features.
+A comprehensive backend system for managing customer support tickets built with **Rust**, **Axum**, and **PostgreSQL**.
 
-## Features
+## 🚀 Features
 
-### Core Features
-- **User Management**: Role-based access control (Admin, Agent, Customer)
-- **Ticket Management**: Full CRUD operations with status and priority management
-- **Comment System**: Public and private comments on tickets
-- **Email Integration**: Automated email notifications using templates
-- **Real-time Notifications**: WebSocket support for live updates
-- **Knowledge Base**: Searchable articles and documentation
-- **Advanced Search**: Full-text search across tickets and articles
-- **Audit Trail**: Complete history tracking for tickets
+### Core Functionality
+- **User Management**: Registration, authentication, and role-based access control
+- **Ticket Management**: Create, read, update, and delete support tickets
+- **Comment System**: Real-time communication between customers and agents
+- **Email Notifications**: Automated email notifications for ticket updates
+- **Role-Based Access**: Customer, Agent, and Admin roles with different permissions
 
 ### Technical Features
 - **JWT Authentication**: Secure token-based authentication
-- **Role-based Authorization**: Granular permissions system
-- **Database Migrations**: Automated schema management
-- **Email Templates**: Configurable email notifications
-- **Full-text Search**: PostgreSQL-based search functionality
-- **WebSocket Support**: Real-time communication
-- **API Documentation**: Comprehensive REST API
-- **Error Handling**: Robust error management
-- **Logging**: Structured logging with tracing
+- **Argon2 Password Hashing**: Industry-standard password security
+- **PostgreSQL Database**: Robust data persistence with SQLx
+- **RESTful API**: Clean, well-structured API endpoints
+- **Docker Support**: Containerized deployment ready
+- **Email Integration**: SMTP email notifications (Gmail/Resend support)
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- **Framework**: Axum (Rust web framework)
-- **Database**: PostgreSQL with SQLx
-- **Authentication**: JWT with bcrypt password hashing
+- **Backend**: Rust with Axum web framework
+- **Database**: PostgreSQL with SQLx ORM
+- **Authentication**: JWT tokens with Argon2 password hashing
 - **Email**: Lettre SMTP client
-- **Search**: PostgreSQL full-text search
-- **Real-time**: WebSocket with tokio-tungstenite
-- **Validation**: Validator crate
-- **Serialization**: Serde
-- **Logging**: Tracing
+- **Containerization**: Docker & Docker Compose
+- **Validation**: Serde for JSON serialization/deserialization
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Rust 1.70+ (latest stable)
-- PostgreSQL 12+
-- SMTP server (Gmail, SendGrid, etc.)
+- Rust (latest stable version)
+- PostgreSQL
+- Docker (optional)
 
-## Installation
+## 🚀 Quick Start
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd support_ticketing_system
-   ```
+### 1. Clone the Repository
+```bash
+git clone <your-repo-url>
+cd major_rust_projectc
+```
 
-2. **Set up PostgreSQL database**
-   ```bash
-   # Create database
-   createdb support_tickets
-   
-   # Or using psql
-   psql -c "CREATE DATABASE support_tickets;"
-   ```
+### 2. Set Up Database
+```bash
+# Create PostgreSQL database
+psql -h localhost -U postgres -c "CREATE DATABASE support_ticketing_system;"
 
-3. **Configure environment variables**
-   ```bash
-   cp env.example .env
-   # Edit .env with your configuration
-   ```
+# Run migrations
+psql -h localhost -U postgres -d support_ticketing_system -f migrations/20240101000000_initial_schema.sql
+```
 
-4. **Install dependencies and run migrations**
-   ```bash
-   cargo build
-   cargo run
-   ```
+### 3. Configure Environment
+```bash
+# Copy environment template
+cp env.example .env
 
-## Configuration
+# Edit .env with your database and email settings
+DATABASE_URL=postgresql://localhost/support_ticketing_system
+JWT_SECRET=your-super-secret-jwt-key
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+```
 
-### Environment Variables
+### 4. Run the Application
+```bash
+# Set database URL and run
+export DATABASE_URL="postgresql://localhost/support_ticketing_system"
+cargo run
+```
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | 3000 |
-| `DATABASE_URL` | PostgreSQL connection string | - |
-| `JWT_SECRET` | Secret key for JWT tokens | - |
-| `JWT_EXPIRATION` | JWT token expiration (seconds) | 86400 |
-| `EMAIL_SMTP_HOST` | SMTP server host | - |
-| `EMAIL_SMTP_PORT` | SMTP server port | 587 |
-| `EMAIL_USERNAME` | SMTP username | - |
-| `EMAIL_PASSWORD` | SMTP password | - |
-| `EMAIL_FROM` | From email address | - |
-| `CORS_ORIGIN` | CORS allowed origins | * |
-| `RUST_LOG` | Logging level | info |
+The server will start at `http://127.0.0.1:3000`
 
-## API Documentation
+## 📚 API Endpoints
 
 ### Authentication
+- `POST /register` - Register new user
+- `POST /login` - User login
 
-#### Register User
-```http
-POST /auth/register
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "first_name": "John",
-  "last_name": "Doe"
-}
-```
-
-#### Login
-```http
-POST /auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
+### Users
+- `GET /users` - Get all users (Admin/Agent only)
+- `GET /users/{id}` - Get user by ID
 
 ### Tickets
-
-#### Create Ticket
-```http
-POST /tickets
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Login Issue",
-  "description": "Cannot login to the application",
-  "priority": "high",
-  "category": "authentication",
-  "tags": ["login", "urgent"]
-}
-```
-
-#### Get Tickets
-```http
-GET /tickets?status=open&priority=high&limit=20&offset=0
-Authorization: Bearer <token>
-```
-
-#### Update Ticket
-```http
-PUT /tickets/{ticket_id}
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "status": "in_progress",
-  "priority": "medium"
-}
-```
+- `GET /tickets` - Get all tickets
+- `POST /tickets` - Create new ticket
+- `GET /tickets/{id}` - Get ticket by ID
+- `PATCH /tickets/{id}` - Update ticket
+- `DELETE /tickets/{id}` - Delete ticket
 
 ### Comments
+- `GET /tickets/{id}/comments` - Get ticket comments
+- `POST /tickets/{id}/comments` - Add comment to ticket
 
-#### Add Comment
-```http
-POST /tickets/{ticket_id}/comments
-Authorization: Bearer <token>
-Content-Type: application/json
+### Notifications
+- `GET /notifications` - Get user notifications
 
-{
-  "content": "Working on this issue",
-  "comment_type": "public"
-}
+## 🔧 Configuration
+
+### Environment Variables
+```env
+DATABASE_URL=postgresql://localhost/support_ticketing_system
+JWT_SECRET=your-super-secret-jwt-key
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
 ```
 
-### Knowledge Base
+### Email Setup
+For Gmail:
+1. Enable 2-factor authentication
+2. Generate an App Password
+3. Use the App Password in SMTP_PASSWORD
 
-#### Create Article
-```http
-POST /knowledge-base
-Authorization: Bearer <token>
-Content-Type: application/json
+For Resend (recommended):
+1. Sign up at [resend.com](https://resend.com)
+2. Get your API key
+3. Use Resend SMTP settings
 
-{
-  "title": "How to Reset Password",
-  "content": "Step-by-step guide...",
-  "category": "account",
-  "tags": ["password", "reset"],
-  "is_published": true
-}
+## 🐳 Docker Deployment
+
+### Using Docker Compose
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
-#### Search Articles
-```http
-GET /knowledge-base/search?query=password&category=account
-Authorization: Bearer <token>
+### Manual Docker Build
+```bash
+# Build image
+docker build -t support-ticketing-system .
+
+# Run container
+docker run -p 3000:3000 --env-file .env support-ticketing-system
 ```
 
-### Search
+## 📊 Database Schema
 
-#### Global Search
-```http
-GET /search/global?query=login
-Authorization: Bearer <token>
-```
-
-## Database Schema
-
-### Core Tables
-
-- **users**: User accounts and roles
+### Tables
+- **users**: User accounts and authentication
 - **tickets**: Support tickets with status and priority
-- **comments**: Public and private comments on tickets
+- **comments**: Ticket comments and communication
 - **notifications**: User notifications
-- **knowledge_base_articles**: Knowledge base content
-- **email_templates**: Email notification templates
-- **ticket_history**: Audit trail for ticket changes
+- **knowledge_base**: Support articles (future feature)
 
-### Key Features
+### Enums
+- **user_role**: customer, agent, admin
+- **ticket_status**: open, pending, closed
+- **ticket_priority**: low, medium, high
 
-- **UUID Primary Keys**: All entities use UUIDs
-- **Timestamps**: Created/updated timestamps on all tables
-- **Full-text Search**: PostgreSQL full-text search indexes
-- **Foreign Key Constraints**: Referential integrity
-- **Triggers**: Automatic updated_at timestamps
+## 🔒 Security Features
 
-## Development
+- **JWT Authentication**: Secure token-based sessions
+- **Argon2 Password Hashing**: Industry-standard password security
+- **Role-Based Access Control**: Different permissions per user role
+- **Input Validation**: Comprehensive request validation
+- **SQL Injection Protection**: Parameterized queries with SQLx
 
-### Running the Application
+## 🧪 Testing
 
+### Manual Testing with curl
 ```bash
-# Development mode
-cargo run
+# Register user
+curl -X POST http://127.0.0.1:3000/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "password123", "first_name": "Test", "last_name": "User", "role": "customer"}'
 
-# Production build
-cargo build --release
-./target/release/support_ticketing_system
+# Login
+curl -X POST http://127.0.0.1:3000/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "password123"}'
+
+# Create ticket (use token from login)
+curl -X POST http://127.0.0.1:3000/tickets \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"title": "Test Ticket", "description": "Test description", "priority": "medium", "customer_id": 1}'
 ```
 
-### Running Tests
-
-```bash
-cargo test
-```
-
-### Database Migrations
-
-```bash
-# Run migrations
-cargo run --bin migrate
-
-# Create new migration
-cargo run --bin migrate create <migration_name>
-```
-
-## Project Structure
-
-```
-src/
-├── main.rs                 # Application entry point
-├── config/                 # Configuration management
-├── database/               # Database connection and migrations
-├── models/                 # Data models and DTOs
-├── handlers/               # HTTP request handlers
-├── services/               # Business logic services
-├── middleware/             # Authentication and other middleware
-├── email/                  # Email service
-├── search/                 # Search functionality
-├── websocket/              # Real-time features
-└── utils/                  # Utility functions
-```
-
-## Security Features
-
-- **Password Hashing**: bcrypt with salt
-- **JWT Tokens**: Secure authentication
-- **Role-based Access**: Granular permissions
-- **Input Validation**: Request validation
-- **SQL Injection Protection**: Parameterized queries
-- **CORS Configuration**: Cross-origin resource sharing
-- **Rate Limiting**: API rate limiting (configurable)
-
-## Monitoring and Logging
-
-- **Structured Logging**: JSON-formatted logs
-- **Request Tracing**: Request/response logging
-- **Error Tracking**: Comprehensive error handling
-- **Health Checks**: `/health` endpoint
-- **Metrics**: Performance monitoring
-
-## Deployment
-
-### Docker
-
-```dockerfile
-FROM rust:1.70 as builder
-WORKDIR /app
-COPY . .
-RUN cargo build --release
-
-FROM debian:bullseye-slim
-RUN apt-get update && apt-get install -y ca-certificates
-COPY --from=builder /app/target/release/support_ticketing_system /usr/local/bin/
-CMD ["support_ticketing_system"]
-```
+## 🚀 Production Deployment
 
 ### Environment Setup
-
 1. Set up PostgreSQL database
 2. Configure environment variables
-3. Run database migrations
-4. Start the application
+3. Set up email service (Gmail/Resend)
+4. Configure reverse proxy (nginx)
 
-## Contributing
+### Security Checklist
+- [ ] Change default JWT secret
+- [ ] Use HTTPS in production
+- [ ] Set up proper firewall rules
+- [ ] Configure database backups
+- [ ] Set up monitoring and logging
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests
+4. Add tests if applicable
 5. Submit a pull request
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
+## 🆘 Support
 
-For support and questions, please open an issue in the repository or contact the development team. 
+For support and questions:
+- Create an issue in this repository
+- Check the API documentation
+- Review the database schema
+
+## 🎯 Roadmap
+
+- [ ] WebSocket real-time notifications
+- [ ] File attachments for tickets
+- [ ] Advanced search and filtering
+- [ ] Knowledge base management
+- [ ] Reporting and analytics
+- [ ] Mobile app support
+- [ ] Multi-language support
+
+---
+
+**Built with ❤️ using Rust and Axum** 

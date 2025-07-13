@@ -3,7 +3,7 @@
 **/*.rs.bk
 Cargo.lock
 
-# Environment variables
+# Environment files
 .env
 .env.local
 .env.production
@@ -13,7 +13,6 @@ Cargo.lock
 .idea/
 *.swp
 *.swo
-*~
 
 # OS
 .DS_Store
@@ -35,12 +34,15 @@ logs/
 dist/
 build/
 
-# Coverage reports
-coverage/
-*.profraw
+# Dependencies
+node_modules/
 
-# Documentation
-docs/_build/
+# SQLx query cache (keep this for offline compilation)
+# .sqlx/
 
 # Docker
 .dockerignore
+
+# Backup files
+*.bak
+*.backup

@@ -36,56 +36,37 @@ A comprehensive backend system for managing customer support tickets built with 
 
 ## 🚀 Quick Start
 
-### Option 1: Using Docker (Recommended for new users)
-
+### 1. Clone the Repository
 ```bash
-# 1. Clone the repository
 git clone <your-repo-url>
 cd ticket_service_backend
+```
 
-# 2. Copy environment file
+### 2. Set Up Your .env File (Important!)
+**After cloning, you must copy the environment file and remove any trailing spaces to avoid SQLx build errors.**
+
+#### On macOS:
+```sh
 cp env.example .env
-
-# 3. Start with Docker Compose (this will set up everything automatically)
-docker-compose up -d
-
-# 4. Check if everything is running
-docker-compose ps
-
-# 5. View logs
-docker-compose logs -f
+sed -i '' -e 's/[[:space:]]*$//' .env
 ```
 
-The server will be available at `http://127.0.0.1:3000`
-
-### Option 2: Manual Setup
-
-#### 1. Clone the Repository
-```bash
-git clone <your-repo-url>
-cd ticket_service_backend
+#### On Linux:
+```sh
+cp env.example .env
+sed -i 's/[[:space:]]*$//' .env
 ```
 
-#### 2. Install PostgreSQL
-
-**On macOS (using Homebrew):**
-```bash
-brew install postgresql
-brew services start postgresql
+#### On Windows (PowerShell):
+```powershell
+Copy-Item env.example .env
+(Get-Content .env) | ForEach-Object { $_.TrimEnd() } | Set-Content .env
 ```
 
-**On Ubuntu/Debian:**
-```bash
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-```
+> **Why?**
+> Trailing spaces in `.env` can cause SQLx macros to panic at build time. These commands ensure your `.env` is clean and your project will build successfully.
 
-**On Windows:**
-Download and install from [PostgreSQL official website](https://www.postgresql.org/download/windows/)
-
-#### 3. Set Up Database
+### 3. Set Up Database
 ```bash
 # Create database user (if not exists)
 sudo -u postgres createuser --interactive
@@ -98,7 +79,7 @@ createdb support_ticketing_system
 psql -d support_ticketing_system -f migrations/20240101000000_initial_schema.sql
 ```
 
-#### 4. Configure Environment
+### 4. Configure Environment
 ```bash
 # Copy environment template
 cp env.example .env
@@ -113,7 +94,7 @@ DATABASE_URL=postgresql://your_username@localhost/support_ticketing_system
 JWT_SECRET=your-super-secret-jwt-key-change-this
 ```
 
-#### 5. Run the Application
+### 5. Run the Application
 ```bash
 # Install dependencies and run
 cargo run

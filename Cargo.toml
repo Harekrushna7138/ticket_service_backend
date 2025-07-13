@@ -49,8 +49,6 @@ thiserror = "1.0"
 # Async runtime
 futures = "0.3"
 
-# HTTP client for external APIs (already defined above)
-
 # Health checks
 health = "0.2"
 

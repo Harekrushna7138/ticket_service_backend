@@ -144,6 +144,7 @@ fn create_jwt(user_id: i32, email: String, role: String, secret: &str) -> Result
     encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref()))
 }
 
+#[allow(dead_code)]
 fn verify_jwt(token: &str, secret: &str) -> Result<JwtClaims, JwtError> {
     let token_data = decode::<JwtClaims>(
         token,
@@ -456,23 +457,23 @@ async fn update_ticket(
     let mut params: Vec<String> = Vec::new();
     let mut param_count = 1;
 
-    if let Some(title) = &ticket_data.title {
+    if let Some(_title) = &ticket_data.title {
         params.push(format!("title = ${}", param_count));
         param_count += 1;
     }
-    if let Some(description) = &ticket_data.description {
+    if let Some(_description) = &ticket_data.description {
         params.push(format!("description = ${}", param_count));
         param_count += 1;
     }
-    if let Some(status) = &ticket_data.status {
+    if let Some(_status) = &ticket_data.status {
         params.push(format!("status = ${}::text::ticket_status", param_count));
         param_count += 1;
     }
-    if let Some(priority) = &ticket_data.priority {
+    if let Some(_priority) = &ticket_data.priority {
         params.push(format!("priority = ${}::text::ticket_priority", param_count));
         param_count += 1;
     }
-    if let Some(assigned_agent_id) = &ticket_data.assigned_agent_id {
+    if let Some(_assigned_agent_id) = &ticket_data.assigned_agent_id {
         params.push(format!("assigned_agent_id = ${}", param_count));
         param_count += 1;
     }

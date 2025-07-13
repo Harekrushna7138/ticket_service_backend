@@ -1,57 +1,53 @@
-# Multi-stage build for Rust application
-FROM rust:1.70 as builder
+# Use the official Rust image as a builder
+FROM rust:1.75 as builder
 
 # Set working directory
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copy manifests
+# Copy the manifests
 COPY Cargo.toml Cargo.lock ./
 
 # Create a dummy main.rs to build dependencies
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 
-# Build dependencies (this layer will be cached)
+# Build dependencies (this layer will be cached if dependencies don't change)
 RUN cargo build --release
 
 # Remove the dummy main.rs and copy the real source code
 RUN rm src/main.rs
-COPY . .
+COPY src ./src
 
 # Build the application
 RUN cargo build --release
 
 # Runtime stage
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
-RUN useradd -r -s /bin/false app
+# Create a non-root user
+RUN useradd -m -u 1000 appuser
 
 # Set working directory
 WORKDIR /app
 
 # Copy the binary from builder stage
-COPY --from=builder /app/target/release/support_ticketing_system /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/support_ticketing_system /app/
 
 # Copy migrations
-COPY --from=builder /app/migrations ./migrations
+COPY migrations ./migrations
 
 # Change ownership to non-root user
-RUN chown -R app:app /app
+RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
-USER app
+USER appuser
 
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/health || exit 1
-
-# Run the application
-CMD ["support_ticketing_system"] 
+# Run the binary
+CMD ["./support_ticketing_system"] 

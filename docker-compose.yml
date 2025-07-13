@@ -1,48 +1,37 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/support_tickets
-      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-      - JWT_EXPIRATION=86400
-      - EMAIL_SMTP_HOST=smtp.gmail.com
-      - EMAIL_SMTP_PORT=587
-      - EMAIL_USERNAME=your-email@gmail.com
-      - EMAIL_PASSWORD=your-app-password
-      - EMAIL_FROM=support@yourcompany.com
-      - CORS_ORIGIN=*
-      - RUST_LOG=info
-    depends_on:
-      - db
-    volumes:
-      - ./migrations:/app/migrations
-    restart: unless-stopped
-
-  db:
+  postgres:
     image: postgres:15
+    container_name: support_ticketing_db
     environment:
-      - POSTGRES_DB=support_tickets
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      POSTGRES_DB: support_ticketing_system
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Optional: Redis for caching and session storage
-  redis:
-    image: redis:7-alpine
+  app:
+    build: .
+    container_name: support_ticketing_app
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/support_ticketing_system
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      RUST_LOG: info
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-  redis_data: 
+  postgres_data: 

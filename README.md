@@ -30,47 +30,134 @@ A comprehensive backend system for managing customer support tickets built with 
 
 ## 📋 Prerequisites
 
-- Rust (latest stable version)
-- PostgreSQL
-- Docker (optional)
+- **Rust** (latest stable version) - [Install Rust](https://rustup.rs/)
+- **PostgreSQL** (version 12 or higher) - [Install PostgreSQL](https://www.postgresql.org/download/)
+- **Docker** (optional) - [Install Docker](https://docs.docker.com/get-docker/)
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
+### Option 1: Using Docker (Recommended for new users)
+
+```bash
+# 1. Clone the repository
+git clone <your-repo-url>
+cd ticket_service_backend
+
+# 2. Copy environment file
+cp env.example .env
+
+# 3. Start with Docker Compose (this will set up everything automatically)
+docker-compose up -d
+
+# 4. Check if everything is running
+docker-compose ps
+
+# 5. View logs
+docker-compose logs -f
+```
+
+The server will be available at `http://127.0.0.1:3000`
+
+### Option 2: Manual Setup
+
+#### 1. Clone the Repository
 ```bash
 git clone <your-repo-url>
-cd major_rust_projectc
+cd ticket_service_backend
 ```
 
-### 2. Set Up Database
+#### 2. Install PostgreSQL
+
+**On macOS (using Homebrew):**
 ```bash
-# Create PostgreSQL database
-psql -h localhost -U postgres -c "CREATE DATABASE support_ticketing_system;"
+brew install postgresql
+brew services start postgresql
+```
+
+**On Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+**On Windows:**
+Download and install from [PostgreSQL official website](https://www.postgresql.org/download/windows/)
+
+#### 3. Set Up Database
+```bash
+# Create database user (if not exists)
+sudo -u postgres createuser --interactive
+# Enter your username when prompted
+
+# Create database
+createdb support_ticketing_system
 
 # Run migrations
-psql -h localhost -U postgres -d support_ticketing_system -f migrations/20240101000000_initial_schema.sql
+psql -d support_ticketing_system -f migrations/20240101000000_initial_schema.sql
 ```
 
-### 3. Configure Environment
+#### 4. Configure Environment
 ```bash
 # Copy environment template
 cp env.example .env
 
-# Edit .env with your database and email settings
-DATABASE_URL=postgresql://localhost/support_ticketing_system
-JWT_SECRET=your-super-secret-jwt-key
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
+# Edit .env with your settings
+nano .env
 ```
 
-### 4. Run the Application
+Update the `.env` file with your database settings:
+```env
+DATABASE_URL=postgresql://your_username@localhost/support_ticketing_system
+JWT_SECRET=your-super-secret-jwt-key-change-this
+```
+
+#### 5. Run the Application
 ```bash
-# Set database URL and run
-export DATABASE_URL="postgresql://localhost/support_ticketing_system"
+# Install dependencies and run
 cargo run
 ```
 
 The server will start at `http://127.0.0.1:3000`
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**1. Database Connection Error**
+```bash
+# Check if PostgreSQL is running
+sudo systemctl status postgresql  # Linux
+brew services list | grep postgresql  # macOS
+
+# Test database connection
+psql -d support_ticketing_system -c "SELECT 1;"
+```
+
+**2. Port Already in Use**
+```bash
+# Check what's using port 3000
+lsof -i :3000
+
+# Kill the process or change port in .env
+```
+
+**3. Permission Denied (Database)**
+```bash
+# Fix PostgreSQL permissions
+sudo -u postgres psql
+CREATE USER your_username WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE support_ticketing_system TO your_username;
+\q
+```
+
+**4. Rust Dependencies Issues**
+```bash
+# Clean and rebuild
+cargo clean
+cargo build
+```
 
 ## 📚 API Endpoints
 
@@ -86,7 +173,7 @@ The server will start at `http://127.0.0.1:3000`
 - `GET /tickets` - Get all tickets
 - `POST /tickets` - Create new ticket
 - `GET /tickets/{id}` - Get ticket by ID
-- `PATCH /tickets/{id}` - Update ticket
+- `PUT /tickets/{id}` - Update ticket
 - `DELETE /tickets/{id}` - Delete ticket
 
 ### Comments
@@ -95,33 +182,48 @@ The server will start at `http://127.0.0.1:3000`
 
 ### Notifications
 - `GET /notifications` - Get user notifications
+- `PUT /notifications/{id}/read` - Mark notification as read
 
-## 🔧 Configuration
+## 🧪 Testing the API
 
-### Environment Variables
-```env
-DATABASE_URL=postgresql://localhost/support_ticketing_system
-JWT_SECRET=your-super-secret-jwt-key
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+### Quick Test with curl
+```bash
+# Test health endpoint
+curl http://127.0.0.1:3000/health
+
+# Register a test user
+curl -X POST http://127.0.0.1:3000/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123",
+    "first_name": "Test",
+    "last_name": "User",
+    "role": "customer"
+  }'
+
+# Login
+curl -X POST http://127.0.0.1:3000/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+
+# Create a ticket (replace YOUR_JWT_TOKEN with token from login)
+curl -X POST http://127.0.0.1:3000/tickets \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Test Ticket",
+    "description": "This is a test ticket",
+    "priority": "medium",
+    "customer_id": 1
+  }'
 ```
-
-### Email Setup
-For Gmail:
-1. Enable 2-factor authentication
-2. Generate an App Password
-3. Use the App Password in SMTP_PASSWORD
-
-For Resend (recommended):
-1. Sign up at [resend.com](https://resend.com)
-2. Get your API key
-3. Use Resend SMTP settings
 
 ## 🐳 Docker Deployment
 
-### Using Docker Compose
+### Using Docker Compose (Recommended)
 ```bash
 # Start all services
 docker-compose up -d
@@ -131,6 +233,9 @@ docker-compose logs -f
 
 # Stop services
 docker-compose down
+
+# Rebuild and restart
+docker-compose up -d --build
 ```
 
 ### Manual Docker Build
@@ -142,20 +247,6 @@ docker build -t support-ticketing-system .
 docker run -p 3000:3000 --env-file .env support-ticketing-system
 ```
 
-## 📊 Database Schema
-
-### Tables
-- **users**: User accounts and authentication
-- **tickets**: Support tickets with status and priority
-- **comments**: Ticket comments and communication
-- **notifications**: User notifications
-- **knowledge_base**: Support articles (future feature)
-
-### Enums
-- **user_role**: customer, agent, admin
-- **ticket_status**: open, pending, closed
-- **ticket_priority**: low, medium, high
-
 ## 🔒 Security Features
 
 - **JWT Authentication**: Secure token-based sessions
@@ -163,27 +254,6 @@ docker run -p 3000:3000 --env-file .env support-ticketing-system
 - **Role-Based Access Control**: Different permissions per user role
 - **Input Validation**: Comprehensive request validation
 - **SQL Injection Protection**: Parameterized queries with SQLx
-
-## 🧪 Testing
-
-### Manual Testing with curl
-```bash
-# Register user
-curl -X POST http://127.0.0.1:3000/register \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "password": "password123", "first_name": "Test", "last_name": "User", "role": "customer"}'
-
-# Login
-curl -X POST http://127.0.0.1:3000/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "password": "password123"}'
-
-# Create ticket (use token from login)
-curl -X POST http://127.0.0.1:3000/tickets \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{"title": "Test Ticket", "description": "Test description", "priority": "medium", "customer_id": 1}'
-```
 
 ## 🚀 Production Deployment
 
